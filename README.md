@@ -1,7 +1,7 @@
 # Carpool-Simulation
 快车、拼车仿真工程，参考论文 [On-demand high-capacity ride-sharing via dynamic trip-vehicle assignment](http://www.alonsomora.com/docs/17-alonsomora-ridesharing-pnas-supplemental.pdf)
 
-## 先看主程序
+**先看主程序，按顺序读懂每个函数操作**
 
 ## Requirements
 1. osmnx
