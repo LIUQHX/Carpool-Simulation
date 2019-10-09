@@ -24,6 +24,7 @@ conda env create -f carpool-simulation.yml
 - 配置环境可能遇到各种问题，配合我的环境文件和goole食用
 
 ## Data Preparation
+- 数据我放在交大云盘上了，还不完全。https://jbox.sjtu.edu.cn/l/Foibeb
 1. 原始数据是纽约曼哈顿岛出租车数据集，目前原始数据和路径字典已经提取好保存成pickle文件了，可以直接运行主程序，但可能有问题:-)。
 
 ## Logic
