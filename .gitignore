@@ -102,3 +102,8 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+expdata1/
+*.log
+
+DijPredecessorDict
+DijShortestPathLength

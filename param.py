@@ -1,13 +1,13 @@
 import pickle
-from sklearn.externals import joblib
+# from sklearn.externals import joblib
 
 class Parameters(object):
     DistanceDict = pickle.load(open("./DijShortestPathLength", "rb"))
     PredecessorDict = pickle.load(open("./DijPredecessorDict", "rb"))
 #     puhub_type_dict = pickle.load(open("./pu_type_dict","rb"))
 #     dohub_type_dict = pickle.load(open("./do_type_dict","rb"))
-    DT = joblib.load("./model/dt_test")
-    LR = joblib.load("./model/lr")
+#     DT = joblib.load("./model/dt_test")
+#     LR = joblib.load("./model/lr")
 
     MaxWaiting = 301  # 最长等待时间
     MaxWaitingRsp = 301  # ？
