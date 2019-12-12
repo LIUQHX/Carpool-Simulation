@@ -74,9 +74,9 @@ def combine_rr(time_now):
                          travel_time_hubs(o2,d2), travel_time_hubs(d1,d2), travel_time_hubs(o2,o1), travel_time_hubs(d1,o1),
                          travel_time_hubs(d2,o1), travel_time_hubs(d1,o2), travel_time_hubs(d2,o2), travel_time_hubs(d2,d1),
                          i[0].LatestPuTime, i[0].LatestDoTime, i[1].LatestPuTime, i[1].LatestDoTime):
-            try:
+            if rr.__contains__(i[0].id):
                 rr[i[0].id].append(i[1])
-            except:
+            else:
                 rr[i[0].id] = [i[1]]
     return rr
 
@@ -97,7 +97,7 @@ def check_combine(time_now, o1o2, o1d1, o1d2, o2d1, o2d2, d1d2, o2o1, d1o1, d2o1
     temp_d1 = temp_d2 + d2d1
     if check_valid(temp_p1, temp_d1, r1putime, r1dotime) and check_valid(temp_p2, temp_d2, r2putime, r2dotime):
         return True
-
+    # TODO: why still carpool?
     temp_p1 = time_now
     temp_d1 = temp_p1 + o1d1
     temp_p2 = temp_d1 + d1o2
@@ -118,7 +118,7 @@ def check_combine(time_now, o1o2, o1d1, o1d2, o2d1, o2d2, d1d2, o2o1, d1o1, d2o1
     temp_d1 = temp_d2 + d2d1
     if check_valid(temp_p1, temp_d1, r1putime, r1dotime) and check_valid(temp_p2, temp_d2, r2putime, r2dotime):
         return True
-
+    # TODO:
     temp_p2 = time_now
     temp_d2 = temp_p2 + o2d2
     temp_p1 = temp_d2 + d2o1
@@ -127,7 +127,6 @@ def check_combine(time_now, o1o2, o1d1, o1d2, o2d1, o2d2, d1d2, o2o1, d1o1, d2o1
         return True
 
     return False
-
 
 def get_fea_sets(Req):
     temp_fea_set = {}
@@ -671,7 +670,11 @@ def opt_assignment(time_now):
                 Parameters.RequestIndex[r.id].assigned = True
                 r.AssignTime = time_now
                 r.price = trip_price(r)
-                del undo_requests[r.id]
+                # del undo_requests[r.id]
+                try:
+                    del undo_requests[r.id]
+                except:
+                    Parameters.wrong += 1
                 #Parameters.Requests.remove(r)
                 #Parameters.RequestDone.append(r)
                 Parameters.Assign += 1

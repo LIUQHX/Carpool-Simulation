@@ -69,6 +69,7 @@ class Parameters(object):
 
     vehicle_timelimit = 0.5
 
+    wrong = 0
 
 
 
