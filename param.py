@@ -32,7 +32,7 @@ class Parameters(object):
     max_link_vehicles = 20
 
     TimeWindow = 30
-    num_time_windows = 120
+    num_time_windows = 0
     TimeEnd = 0
 
     Requests = []

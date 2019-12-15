@@ -103,7 +103,11 @@ venv.bak/
 # mypy
 .mypy_cache/
 expdata1/
+trainingdata2/
 *.log
+.vscode
+output/
+*.out
 
 DijPredecessorDict
 DijShortestPathLength

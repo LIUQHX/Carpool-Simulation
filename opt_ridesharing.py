@@ -61,6 +61,7 @@ def combine_rr(time_now):
     try to enumerate each two requests to see if they are able to share a ride.
     :param time_now: current time.
     :return: rr_graph, which is a dict. key: request ID. value: all the requests that can connect to key.
+            {1: [2, 3, 4], 2: [3, 4], 3: [4]}
     '''
     rr = {}
     for i in itertools.combinations(Parameters.Requests, 2):       #get all of possible combinations of length 2.
@@ -97,13 +98,13 @@ def check_combine(time_now, o1o2, o1d1, o1d2, o2d1, o2d2, d1d2, o2o1, d1o1, d2o1
     temp_d1 = temp_d2 + d2d1
     if check_valid(temp_p1, temp_d1, r1putime, r1dotime) and check_valid(temp_p2, temp_d2, r2putime, r2dotime):
         return True
-    # TODO: why still carpool?
-    temp_p1 = time_now
-    temp_d1 = temp_p1 + o1d1
-    temp_p2 = temp_d1 + d1o2
-    temp_d2 = temp_p2 + o2d2
-    if check_valid(temp_p1, temp_d1, r1putime, r1dotime) and check_valid(temp_p2, temp_d2, r2putime, r2dotime):
-        return True
+
+    # temp_p1 = time_now
+    # temp_d1 = temp_p1 + o1d1
+    # temp_p2 = temp_d1 + d1o2
+    # temp_d2 = temp_p2 + o2d2
+    # if check_valid(temp_p1, temp_d1, r1putime, r1dotime) and check_valid(temp_p2, temp_d2, r2putime, r2dotime):
+    #     return True
 
     temp_p2 = time_now
     temp_p1 = temp_p2 + o2o1
@@ -118,17 +119,21 @@ def check_combine(time_now, o1o2, o1d1, o1d2, o2d1, o2d2, d1d2, o2o1, d1o1, d2o1
     temp_d1 = temp_d2 + d2d1
     if check_valid(temp_p1, temp_d1, r1putime, r1dotime) and check_valid(temp_p2, temp_d2, r2putime, r2dotime):
         return True
-    # TODO:
-    temp_p2 = time_now
-    temp_d2 = temp_p2 + o2d2
-    temp_p1 = temp_d2 + d2o1
-    temp_d1 = temp_p1 + o1d1
-    if check_valid(temp_p1, temp_d1, r1putime, r1dotime) and check_valid(temp_p2, temp_d2, r2putime, r2dotime):
-        return True
+
+    # temp_p2 = time_now
+    # temp_d2 = temp_p2 + o2d2
+    # temp_p1 = temp_d2 + d2o1
+    # temp_d1 = temp_p1 + o1d1
+    # if check_valid(temp_p1, temp_d1, r1putime, r1dotime) and check_valid(temp_p2, temp_d2, r2putime, r2dotime):
+    #     return True
 
     return False
 
 def get_fea_sets(Req):
+    """
+    来了最新的订单，先看一遍之前可行的RV组合；
+    如果前面的订单还在请求列中，就取出这些请求列，不用重新算？
+    """
     temp_fea_set = {}
     for r in Req:
         try:
@@ -148,6 +153,12 @@ def check_fea(list, type, time):
     return True
 
 def connect_RV(requests, vehicles, fea_set, current_id):
+    """
+    requests: 当前的轮次的订单
+    vehicles: 与当前轮次订单有关的车
+    fea_set: 前一轮可行的RV组合 r.id: {v.id: True}
+    currend_id: 当前最新订单的id
+    """
     results = []
     for r in requests:
         temp_trip = None
@@ -156,13 +167,16 @@ def connect_RV(requests, vehicles, fea_set, current_id):
         if r.id < current_id:
             if r.IsUber is True:
                 for v in vehicles:
+                    # 如果车在前一轮的订单组合，并且这个车还没接人，那么还是这个组合
                     if v.id in fea_set[r.id] and v.num_passengers == 0:
                         list = [r]
                         type = [2]
                         [opt_sequence, total_cost, total_dis] = compute_travel_RV(list,type,[v.ini, v.fin, v.reach],v.CurrentTime,
                                                                        0, 0, v.num_passengers,v.Capacity)
                         if total_cost is not math.inf:
+                            # 如果cost满足要求，这个车就可以和这个单建边
                             r.PossibleVehicles.append([v.id, total_cost, total_dis])
+                            # 一单形成trip
                             try:
                                 temp_trip.vehicle_list.append((v.id, opt_sequence, total_cost, total_dis))
                             except:
@@ -171,6 +185,7 @@ def connect_RV(requests, vehicles, fea_set, current_id):
 
             else:
                 for v in vehicles:
+                    # 如果v在r的可行车里面，并且车容量够
                     if v.id in fea_set[r.id] and v.num_passengers < v.Capacity:
                         list = [r] + v.passengers
                         type = [2] + [1]*len(v.passengers)
@@ -206,6 +221,7 @@ def connect_RV(requests, vehicles, fea_set, current_id):
                     if v.IsUber is False and v.num_passengers < v.Capacity:
                         list = [r] + v.passengers
                         type = [2] + [1] * len(v.passengers)
+                        # TODO:
                         [opt_sequence, total_cost, total_dis] = compute_travel_RV(list, type, [v.ini, v.fin, v.reach],
                                                                        v.CurrentTime,
                                                                        0, 0, v.num_passengers, v.Capacity)
@@ -217,7 +233,7 @@ def connect_RV(requests, vehicles, fea_set, current_id):
                                 temp_trip = trip(temp_id, [r])
                                 temp_trip.vehicle_list.append((v.id, opt_sequence, total_cost, total_dis))
 
-
+        # 如果能接他的车太多了，取前20
         if len(r.PossibleVehicles) > Parameters.max_link_vehicles:
             r.PossibleVehicles.sort(key=lambda x: x[1])
             r.PossibleVehicles = r.PossibleVehicles[:Parameters.max_link_vehicles]
@@ -226,14 +242,25 @@ def connect_RV(requests, vehicles, fea_set, current_id):
         elif r.PossibleVehicles == []:
             results.append([False, r.id])
             continue
+        # 和这个订单有关的trip记录
         r.trips.append(temp_id)
-
+        # v.id: True ? why use?
         tmp_trip_vehicle_list = {i[0]: True for i in temp_trip.vehicle_list}
+        # [当前订单，[当前trip id，当前trip，可以接这个trip的车]，订单id]
         results.append([r, [temp_id, temp_trip, tmp_trip_vehicle_list], r.id])
     return results
 
 
 def compute_travel_RV(list, type, current_position, current_time, cost, dis, num_passengers, capacity):
+    """
+    list: 载人车当前的订单和新订单的组合，看能否拼
+    type:
+    current_position: three point to represent
+    current_time:
+    cost: 0
+    dis: 0
+    num_passengers, capacity: v.num, v.capacity
+    """
     opt_cost = math.inf
     opt_dis = math.inf
     opt_sequence = []
@@ -244,7 +271,7 @@ def compute_travel_RV(list, type, current_position, current_time, cost, dis, num
         return [], cost, dis
 
     if length == 1:
-        if type[0] == 2:       #need pick up and drop off
+        if type[0] == 2:       # 这单被空车接，need pick up and drop off
             c_time2 = current_time + travel_time_p2h(current_position, list[0].PuHub)
             temp_dis2 = travel_time_p2h(current_position, list[0].PuHub)*Parameters.Speed*1000
             if c_time2 <= list[0].LatestPuTime and (num_passenger_temp + 1) <= capacity:        #can pick up
@@ -300,14 +327,18 @@ def get_related_vehicles(requests, feasible_sets):
     '''
     check feasibility according to the distance.
     :param cluster: a list of requests that will be fit into a processor.
+    :requests: 本轮全部订单
     :param feasible_sets: feasible vehicle set for the cluster
-    :return:
+    :return: 和这些request有关的所有车，也就是能接其中任何request就满足条件
     '''
     temp_vehicles = []
     for v in Parameters.Vehicles:
         for r in requests:
+            # TODO: 之前轮次的订单，而且这个车不能接，直接跳过不用判断了
             if r.id < Parameters.current_request_id and v.id not in feasible_sets[r.id]:
                 continue
+            # 如果司机能在接驾时延内接单就可以，这一步主要是为了把沾边的车都选出来
+            # TODO: 为什么不直接确定哪个订单可以被哪个车接？
             if v.CurrentTime + travel_time_p2h([v.ini, v.fin, v.reach], r.PuHub) <= r.LatestPuTime and r.IsUber == v.IsUber:
                 temp_vehicles.append(v)
                 break
@@ -317,7 +348,6 @@ def get_related_vehicles(requests, feasible_sets):
 def compute_RV(time_now):
     fea_sets = get_fea_sets(Parameters.Requests)
     results = connect_RV(Parameters.Requests, get_related_vehicles(Parameters.Requests, fea_sets), fea_sets, Parameters.current_request_id)
-
     results.sort(key=lambda x: x[-1])
 
     for i in results:
@@ -327,10 +357,12 @@ def compute_RV(time_now):
 
         #Parameters.RequestIndex[i[0].id].update_rv(i[0].trips)
         #i[1][1].update_address()
-
+        # vehicles: trip
         Parameters.Trips[i[1][0]] = i[1][1]
         for v in i[0].PossibleVehicles:
             Parameters.Vehicles[v[0]].possible_requests.append([Parameters.RequestIndex[i[0].id]])
+        # {5: True, 254: True, 427: True,... 这到底是什么东西
+        # r.id: {v.id: True} ??? why use
         Parameters.fea_set[i[0].id] = i[1][2]
 
 
@@ -340,20 +372,18 @@ def connect_RTV(vehicles, rr):
         VT_list = []
         temp_T = {}
         temp_T[1] = v.possible_requests
-
-
+        # 对这个v所有可接的请求
         for i in temp_T[1]:
             rr_ind = 0
             trip_ind = 0
             try:
                 while (trip_ind < len(temp_T[1])) and (rr_ind < len(rr[i[0].id])):
-
+                    # trip的订单id = rr的订单id
                     if temp_T[1][trip_ind][0].id == rr[i[0].id][rr_ind].id:
                         temp_trip = i + temp_T[1][trip_ind]
                         temp_T, VT_list = combine_rv(v, temp_trip, temp_T, VT_list)
                         trip_ind += 1
                         rr_ind += 1
-
                     elif temp_T[1][trip_ind][0].id < rr[i[0].id][rr_ind].id:
                         trip_ind += 1
                     else:
@@ -450,6 +480,7 @@ def compute_travel_RTV(list, type, current_position, current_time, cost, dis, nu
     return opt_sequence, opt_cost, opt_dis
 
 def compute_RTV(rr):
+    # 莫非是判断两拼和车
     results = connect_RTV(Parameters.Vehicles, rr)
 
     for i in results:
@@ -465,12 +496,6 @@ def compute_RTV(rr):
 
     for v in Parameters.Vehicles:
         v.assigned_task = False
-
-
-
-
-
-
 
 
 def trip_price(req):
@@ -675,17 +700,17 @@ def opt_assignment(time_now):
                     del undo_requests[r.id]
                 except:
                     Parameters.wrong += 1
+                    print("del undo_request[r.id] error")
                 #Parameters.Requests.remove(r)
                 #Parameters.RequestDone.append(r)
                 Parameters.Assign += 1
 
-
+    # 计算分单完毕，这一轮trip清空
     Parameters.Trips = {}
-
 
     idle_vehicles = update_vehicles(time_now)
 
-    rebalance(vehicles, undo_requests, idle_vehicles)
+    # rebalance(vehicles, undo_requests, idle_vehicles)
 
     update_requests(time_now)
 
@@ -832,9 +857,12 @@ def update_vehicles(time_now):
                     Parameters.PU += 1
                     v.PuTotalTime += tmp_tt
                     v.TravelTime += tmp_tt
-                    Parameters.Requests.remove(Req)
+                    try:
+                        Parameters.Requests.remove(Req)
+                    except:
+                        Parameters.wrong += 1
+                        print("Parameters.Requests.remove(Req) error")
                     Parameters.RequestDone.append(Req)
-
 
                 else:
                     if v.TimeRemain >= 0:
@@ -884,8 +912,11 @@ def update_vehicles(time_now):
                     Req.DoTime = time_now + Parameters.TimeWindow - v.TimeRemain
                     Parameters.TotalDistance += Parameters.DistanceDict[Req.PuHub][Req.DoHub]
                     v.passengers.remove(Req)
-
-                    del Parameters.RequestIndex[Req.id]
+                    try:
+                        del Parameters.RequestIndex[Req.id]
+                    except:
+                        Parameters.wrong += 1
+                        print("del Parameters.RequestIndex[Req.id] error")
 
                     v.total_passengers += 1
                     v.num_passenger_time[v.num_passengers] += tmp_tt
@@ -931,7 +962,7 @@ def update_vehicles(time_now):
 
 def rebalance(vehicles, request_todo, idling_vehicles):
     rb_vars = min(len(request_todo),len(idling_vehicles))
-    print('rb_requests', len(request_todo))
+    print('reblance_requests', len(request_todo))
     print('idling_vehicles', len(idling_vehicles))
     if rb_vars != 0:
         model = Model('Rebalance')
