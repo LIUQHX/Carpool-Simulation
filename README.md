@@ -1,5 +1,5 @@
 # Carpool-Simulation
-快车、拼车仿真工程，参考论文 [On-demand high-capacity ride-sharing via dynamic trip-vehicle assignment](http://www.alonsomora.com/docs/17-alonsomora-ridesharing-pnas-supplemental.pdf)
+快车、拼车仿真工程
 
 ## Requirements
 1. osmnx
@@ -20,3 +20,4 @@
 ## Logic
 1. 主程序是 [simulation_rs.ipynb](simulation_rs.ipynb)
 2. 通过 [network_int.ipynb](network_int.ipynb) 生成路径信息。逻辑是全城用很多结点表示，提取全连通分量，使得全城任意两个点之间可以相互到达。然后通过最短路径算法计算任意两个点之间的最短距离，保存成字典以便后面路径规划使用。
+3. 结果处理程序有四个jupyter脚本。
