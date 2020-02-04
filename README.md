@@ -1,5 +1,5 @@
 # Carpool-Simulation
-快车、拼车仿真
+快车、拼车仿真；参考论文：On-demand high-capacity ride-sharing via dynamic trip-vehicle assignment, PANS 2017.
 
 ## Requirements
 1. osmnx
