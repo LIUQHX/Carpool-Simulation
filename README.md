@@ -17,7 +17,7 @@
   conda create -n ridesharing python=3.7
   conda install osmnx -c conda-forge
   ```
-  - 网上申请gurobipy这个库的学生license，理论上用其他线性规划的库也可以求解；
+  - https://www.gurobi.com/free-trial/ 网上申请gurobipy这个库的免费版license；
   - 安装gurobipy；
   ```
   conda config --add channels http://conda.anaconda.org/gurobi
